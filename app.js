@@ -8,6 +8,7 @@ const $ = (id) => document.getElementById(id);
 // ---------- ルート(tools/build_route.py で作成)と観光地 ----------
 // ゲーム内換算: 実距離 1km = 150歩。到着歩数は実際の道のりから決める。
 const STEPS_PER_KM = 150;
+SPOTS.forEach((sp, i) => { sp.pre = PRE_NAMES[i]; sp.preArea = sp.pre.replace(/[0-9０-９]+$/, ""); });
 for (const sp of SPOTS) {
   const r = ROUTE.spots[sp.id];
   Object.assign(sp, { km: r.km, lat: r.lat, lon: r.lon, elev: Math.round(r.elev), cum: Math.round(r.km * STEPS_PER_KM / 100) * 100 });
@@ -86,18 +87,19 @@ function nextSpot() { return SPOTS.find((s) => S.total < s.cum); }
 
 function guideSay() {
   const n = nextSpot();
+  const hint = n ? n.preArea + "の名所" : "";
   if (!n) return ["right-egao", "ついに秋田一周ゴール! ここまで歩き切ったあなたは最高の旅人だよ。"];
   const prev = SPOTS[SPOTS.indexOf(n) - 1];
   const remain = n.cum - S.total;
   const leg = n.cum - (prev ? prev.cum : 0);
   const ratio = 1 - remain / leg;
-  if (S.total === 0) return ["right-wink", "秋田駅からスタート! まずは「" + n.name + "」を目指して歩こう。写真もたくさん撮ってね。"];
-  if (ratio > 0.8) return ["right-odoroki", "もうすぐ「" + n.name + "」! あと" + fmt(remain) + "歩だよ。"];
+  if (S.total === 0) return ["right-wink", "秋田駅からスタート! まずは" + hint + "を目指して歩こう。写真もたくさん撮ってね。"];
+  if (ratio > 0.8) return ["right-odoroki", "もうすぐ" + hint + "! あと" + fmt(remain) + "歩だよ。"];
   const climb = n.elev - MapView.elevAt(currentKm());
-  if (ratio > 0.2 && climb > 300) return ["right-komari", "ここからは登りだよ。「" + n.name + "」は標高約" + n.elev + "m。ゆっくり行こう。"];
-  if (ratio > 0.2 && climb < -250) return ["right-egao", "下り坂! 「" + n.name + "」は標高約" + n.elev + "mだから、歩きやすいよ。"];
-  if (ratio > 0.4) return ["right-nattoku", "いい調子! 「" + n.name + "」は" + n.tag + "なんだって。"];
-  return ["right-egao", "今日も一歩ずつ。「" + n.name + "」まであと" + fmt(remain) + "歩。"];
+  if (ratio > 0.2 && climb > 300) return ["right-komari", "ここからは登りだよ。" + hint + "は標高約" + n.elev + "m。ゆっくり行こう。"];
+  if (ratio > 0.2 && climb < -250) return ["right-egao", "下り坂! " + hint + "は標高約" + n.elev + "mだから、歩きやすいよ。"];
+  if (ratio > 0.4) return ["right-nattoku", "いい調子! " + hint + "を目指して、あと" + fmt(remain) + "歩だよ。"];
+  return ["right-egao", "今日も一歩ずつ。" + hint + "を目指して、あと" + fmt(remain) + "歩。"];
 }
 
 function render() {
@@ -115,12 +117,12 @@ function render() {
     const base = prev ? prev.cum : 0;
     const pct = Math.min(100, ((S.total - base) / (n.cum - base)) * 100);
     $("nextLabel").textContent = "次の目的地";
-    $("nextName").textContent = n.name;
+    $("nextName").textContent = n.preArea + "の名所";
     $("barFill").style.width = pct + "%";
     $("nextRemain").textContent = "あと " + fmt(n.cum - S.total) + " 歩";
     $("nextPct").textContent = Math.floor(pct) + "%";
     const nowE = Math.round(MapView.elevAt(currentKm()));
-    $("nextElev").textContent = "いまの標高 約" + nowE + "m → 「" + n.name + "」標高 約" + n.elev + "m(あと約" + Math.max(0.1, n.km - currentKm()).toFixed(1) + "km)";
+    $("nextElev").textContent = "いまの標高 約" + nowE + "m → " + n.preArea + "の名所 標高 約" + n.elev + "m(あと約" + Math.max(0.1, n.km - currentKm()).toFixed(1) + "km)";
   } else {
     $("nextElev").textContent = "";
     $("nextLabel").textContent = "旅のゴール";

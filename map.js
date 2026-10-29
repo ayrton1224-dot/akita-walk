@@ -112,7 +112,7 @@ const MapView = (() => {
         el("circle", { class: "hit", cx: x, cy: y, r: 16 }),
         el("circle", { class: "pin" + (on ? " on" : "") + (sp.id === nextId ? " next" : ""), cx: x, cy: y, r: 10 }),
         el("text", { class: "pin-no", x, y }, String(idx + 1)));
-      if (z >= 9) g.append(el("text", { class: "pin-lbl" + (on ? "" : " off"), x: +x + 13, y: +y + 4 }, on ? sp.name : "？？？"));   // 到着前は名前を隠す
+      if (z >= 9) g.append(el("text", { class: "pin-lbl" + (on ? "" : " off"), x: +x + 13, y: +y + 4 }, on ? sp.name : sp.pre));   // 到着前は「男鹿1」などの地域名
       svgEl.append(g);
     });
 
