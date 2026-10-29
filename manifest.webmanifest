@@ -1,0 +1,15 @@
+{
+ "name": "あきた歩き旅",
+ "short_name": "あきた歩き旅",
+ "start_url": "./index.html",
+ "display": "standalone",
+ "background_color": "#f6f1e7",
+ "theme_color": "#2f6b4f",
+ "icons": [
+  {
+   "src": "icon-180.png",
+   "sizes": "180x180",
+   "type": "image/png"
+  }
+ ]
+}

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>あきた歩き旅</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="あきた歩き旅">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#2f6b4f">
+<meta name="robots" content="noindex,nofollow">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<script>window.AKITA_WEB = true;</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>あきた歩き旅</h1>
+    <div class="total"><b id="totalSteps">0</b><span>歩</span></div>
+  </header>
+
+  <section class="guide">
+    <img id="guideImg" src="chara/right-egao.svg" alt="山女子">
+    <div class="bubble" id="guideText"></div>
+  </section>
+
+  <section class="card next">
+    <div class="next-head">
+      <span id="nextLabel">次の目的地</span>
+      <strong id="nextName"></strong>
+    </div>
+    <div class="bar"><i id="barFill"></i></div>
+    <div class="next-foot"><span id="nextRemain"></span><span id="nextPct"></span></div>
+    <div class="next-elev" id="nextElev"></div>
+  </section>
+
+  <section class="card" id="manual" hidden>
+    <h2>今日の歩数を入れる</h2>
+    <p class="note">「ヘルスケア」アプリで見たその日の歩数を入力します。同じ日に入れ直すと、増えた分だけ進みます。</p>
+    <div class="manual-row">
+      <input type="date" id="mDate" aria-label="日付">
+      <input type="number" id="mSteps" inputmode="numeric" min="0" max="200000" placeholder="歩数" aria-label="歩数">
+      <button id="mSave">記録</button>
+    </div>
+    <p class="note" id="mDays"></p>
+  </section>
+
+  <section class="card">
+    <h2>旅のルート</h2>
+    <div class="map" id="map">
+      <div class="tiles"></div>
+      <svg class="overlay" aria-label="秋田県の旅のルート"></svg>
+      <div class="walker"><img src="chara/right.svg" alt="山女子"></div>
+      <div class="map-ctrl">
+        <button class="map-btn" data-zoom-in aria-label="拡大">＋</button>
+        <button class="map-btn" data-zoom-out aria-label="縮小">－</button>
+        <button class="map-btn small" data-fit>全体</button>
+        <button class="map-btn small" data-here>現在地</button>
+      </div>
+      <div class="map-hint" hidden>地図を動かしています。「現在地」で山女子に戻ります</div>
+      <div class="map-legend"><span>標高</span><span>低</span><i></i><span>高</span></div>
+      <div class="map-credit">地理院タイル(淡色地図・色別標高図・陰影起伏図)</div>
+    </div>
+    <h2 class="sub">ルートの高低差</h2>
+    <svg id="profile" viewBox="0 0 360 120" role="img" aria-label="ルートの標高プロフィール"></svg>
+    <p class="note" id="routeNote"></p>
+  </section>
+
+  <section class="card">
+    <h2>観光地リスト</h2>
+    <ol id="list" class="list"></ol>
+  </section>
+
+  <section class="card dev" id="dev" hidden>
+    <h2>テスト用(ブラウザのみ)</h2>
+    <div class="dev-row">
+      <button data-add="500">+500歩</button>
+      <button data-add="3000">+3000歩</button>
+      <button data-add="10000">+1万歩</button>
+      <button data-reset>リセット</button>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet">
+    <div class="sheet-top">
+      <div class="bubble tail-r" id="mSay"></div>
+      <img id="mImg" src="chara/tabioji-egao.svg" alt="たびおじ">
+    </div>
+    <div class="spot-name"><small id="mArea"></small><h3 id="mName"></h3><p id="mTag"></p></div>
+    <figure class="photo" id="mPhoto" hidden>
+      <img id="mPhotoImg" alt="ベストショット">
+      <figcaption id="mCaption"></figcaption>
+    </figure>
+    <div class="nophoto" id="mNoPhoto" hidden></div>
+    <p class="fact" id="mFact"></p>
+    <div class="sheet-actions">
+      <button id="mClose">つぎへ</button>
+    </div>
+  </div>
+</div>
+
+<script src="spots.js"></script>
+<script src="route.js"></script>
+<script src="map.js"></script>
+<script src="photos/photos.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
