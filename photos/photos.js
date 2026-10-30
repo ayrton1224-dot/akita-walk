@@ -85,7 +85,7 @@ const PHOTOS = {
   "place": "太平湖(太平湖グリーンハウス)"
  },
  "moriyoshi": {
-  "date": "2022/02/14",
+  "date": "2025/01/25",
   "place": "森吉山の樹氷(阿仁スキー場)"
  },
  "momodo": {
