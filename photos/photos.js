@@ -30,7 +30,7 @@ const PHOTOS = {
  },
  "tazawako": {
   "date": "2023/09/23",
-  "place": "御座石神社"
+  "place": "御座石神社から見る田沢湖(晴れ)"
  },
  "kakunodate": {
   "date": "2023/11/08",
@@ -127,5 +127,9 @@ const PHOTOS = {
  "kurikoma": {
   "date": "2022/07/30",
   "place": "栗駒山 山頂"
+ },
+ "kamikoani": {
+  "date": "2025/01/26",
+  "place": "道の駅 かみこあに(上小阿仁村)"
  }
 };
