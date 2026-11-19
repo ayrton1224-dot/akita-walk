@@ -146,3 +146,42 @@ button.ghost { background: var(--green-soft); color: var(--green); }
 .manual-row input[type="number"] { flex: 1; }
 
 .ver { text-align: center; font-size: 11px; color: var(--sub); margin: 18px 0 0; }
+
+/* 仲間(たびおじ) */
+.guide-buddy { width: 56px !important; }
+.walker img.buddy { left: -54px; width: 40px; height: 60px; }
+.walker.west img.buddy { left: 14px; }
+.walker img.buddy[hidden] { display: none; }
+#guideText { white-space: pre-line; }
+
+/* イベント: ドラクエ風のコマンド戦闘画面 */
+.modal#battle { align-items: center; background: rgba(8, 10, 24, .82); }
+.battle { width: 100%; max-width: 480px; padding: 12px; font-family: "Hiragino Maru Gothic ProN", "Noto Sans JP", sans-serif; color: #fff; }
+.b-scene { position: relative; height: 250px; border-radius: 10px; border: 3px solid #fff; overflow: hidden;
+  background: linear-gradient(180deg, #8fa7c4 0%, #cfdcec 62%, #f4f8fc 62%, #ffffff 100%); }
+.b-snow { position: absolute; inset: 0; pointer-events: none; opacity: .9;
+  background-image: radial-gradient(circle, #fff 1.6px, transparent 2.4px), radial-gradient(circle, #fff 1.1px, transparent 1.8px);
+  background-size: 38px 46px, 23px 31px; background-position: 0 0, 11px 17px; animation: snow 5s linear infinite; }
+@keyframes snow { to { background-position: -14px 46px, -6px 48px; } }
+.b-enemy { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; }
+.b-enemy img { height: 190px; display: block; margin: 0 auto; transition: transform .7s ease; transform-origin: 50% 50%; }
+.b-shake.frozen { animation: shiver .18s linear infinite alternate; }
+.b-shake.frozen img { filter: saturate(.55) brightness(1.06); }
+.b-enemy img.lie { transform: translateY(40px) rotate(-90deg); }       /* 雪の上に横たおれ */
+.b-enemy img.half { transform: translateY(14px) rotate(-38deg); }      /* 少し起きあがる */
+@keyframes shiver { from { transform: translateX(-2px); } to { transform: translateX(2px); } }
+.b-name { display: inline-block; margin-top: 2px; padding: 2px 12px; border-radius: 6px; background: rgba(0, 0, 32, .78); font-size: 15px; letter-spacing: .06em; }
+#bHearts { color: #ff6b81; letter-spacing: .1em; }
+.b-win { margin-top: 8px; border: 3px solid #fff; border-radius: 8px; background: #000a3c; box-shadow: inset 0 0 0 2px #000a3c, inset 0 0 0 3px #3a4cb0;
+  padding: 14px 16px; font-size: 17px; line-height: 1.7; letter-spacing: .05em; }
+.b-msg { min-height: 96px; position: relative; cursor: pointer; }
+.b-next { position: absolute; right: 12px; bottom: 6px; font-style: normal; font-size: 13px; animation: blink .8s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.b-cmd { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; padding: 8px 12px; }
+.b-yn { display: flex; justify-content: center; gap: 28px; padding: 8px 12px; }
+.b-cmd[hidden], .b-yn[hidden], .b-next[hidden] { display: none; }
+.b-cmd button, .b-yn button { background: transparent; color: #fff; border-radius: 4px; padding: 8px 6px 8px 26px; text-align: left;
+  font-size: 18px; font-weight: 400; letter-spacing: .08em; position: relative; }
+.b-cmd button:hover::before, .b-cmd button:focus-visible::before, .b-cmd button:active::before,
+.b-yn button:hover::before, .b-yn button:focus-visible::before, .b-yn button:active::before { content: "▶"; position: absolute; left: 6px; }
+.b-cmd button:active, .b-yn button:active { background: #1a2a90; }

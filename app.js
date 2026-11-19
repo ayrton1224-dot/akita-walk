@@ -23,6 +23,7 @@ function freshState() {
            arrivals: {}, seen: {}, mockCounter: 0 };
 }
 let S = load();
+if (!S.ev && S.arrivals && S.arrivals.chokai) S.ev = { done: true, hearts: 0, buddy: false };   // イベント追加前に鳥海山へ着いていた人は、イベントなし
 function load() {
   try { return Object.assign(freshState(), JSON.parse(localStorage.getItem(KEY))); }
   catch (e) { return freshState(); }
@@ -109,7 +110,10 @@ function render() {
 
   const [pose, text] = guideSay();
   $("guideImg").src = "chara/" + pose + ".svg";
-  $("guideText").textContent = text;
+  $("guideText").textContent = text + (hasBuddy() ? "\nたびおじも いっしょに あるいているよ。" : "");
+  $("guideBuddy").hidden = !hasBuddy();
+  const bd = document.querySelector(".walker .buddy");
+  if (bd) bd.hidden = !hasBuddy();
 
   const n = nextSpot();
   if (n) {
@@ -176,8 +180,9 @@ function renderList() {
 let current = null;
 
 function showNextArrival() {
-  if (current) return;
+  if (current || battleOpen) return;
   const sp = SPOTS.find((s) => S.arrivals[s.id] && !S.seen[s.id]);
+  if (eventPending() && (!sp || sp.cum > EVENT_AT)) { startBattle(); return; }     // イベント地点より前の到着を先に見せる
   if (sp) openSpot(sp, true);
 }
 
@@ -220,6 +225,122 @@ if ($("finale")) {
   $("fClose").addEventListener("click", () => { $("finale").hidden = true; showNextArrival(); });
   $("goalOpen").addEventListener("click", () => { $("finale").hidden = false; });
 }
+
+// ---------- イベント: 鳥海山の手前で、遭難しているたびおじを見つける ----------
+// 鳥海山の2000歩手前で発生。ドラクエ風のコマンド戦闘画面。
+//  温める: たびおじにハートが1つつく(3つで仲間になり、山女子と一緒に残りの道を歩く)
+//  戦う・逃げる・無視: 「本当にそうしますか?」と聞き、はいを選ぶとイベント終了(仲間にはならない)
+const EVENT_AT = SPOTS.find((s) => s.id === "chokai").cum - 2000;
+const EV_HEARTS = 3;
+const EV_LABEL = { fight: "戦う", flee: "逃げる", warm: "温める", ignore: "無視" };
+const EV_END = {
+  fight: ["山女子は たびおじに たたかいを いどんだ!", "しかし たびおじは ぴくりとも うごかない…", "山女子は その場を あとにした。"],
+  flee: ["山女子は にげだした!", "たびおじを のこして、さきへ すすんだ…"],
+  ignore: ["山女子は たびおじを むしした。", "ふぶきの なか、たびおじは ひとり とりのこされた…"],
+};
+function ev() { return (S.ev = S.ev || { done: false, hearts: 0, buddy: false }); }
+function eventPending() { return !ev().done && S.total >= EVENT_AT; }
+function hasBuddy() { return !!(S.ev && S.ev.buddy); }
+
+// 温める → ハートが1つつく。3つになったら仲間になってイベント終了
+function evWarm() {
+  const e = ev();
+  e.hearts = Math.min(EV_HEARTS, e.hearts + 1);
+  const msgs = ["山女子は たびおじを あたためた!", "たびおじに ハートが ひとつ ついた!"];
+  if (e.hearts >= EV_HEARTS) {
+    e.done = true; e.buddy = true;
+    msgs.push("たびおじは げんきを とりもどした!", "たびおじが なかまに なった!", "「いっしょに あるこう!」\nここから ふたりで のこりの みちを あるきます。");
+  }
+  save();
+  return { msgs, end: e.done };
+}
+// 戦う・逃げる・無視 を「はい」で決めた場合 → イベント終了(仲間にはならない)
+function evGiveUp(cmd) {
+  const e = ev();
+  e.done = true; e.buddy = false;
+  save();
+  return { msgs: EV_END[cmd], end: true };
+}
+
+let battleOpen = false, bQueue = [], bAfter = null, bTimer = null, bTyping = null;
+function bHearts() {
+  const h = ev().hearts;
+  $("bHearts").textContent = "♥".repeat(h) + "♡".repeat(EV_HEARTS - h);
+  const img = $("bEnemy");
+  img.src = "chara/" + (h >= EV_HEARTS ? "tabioji-egao" : h === 2 ? "tabioji-nattoku" : "tabioji-komari") + ".svg";
+  $("bShake").classList.toggle("frozen", h < 2);
+  img.classList.toggle("lie", h === 0);                  // 最初は横にたおれている → ハート1つで少し起きる → 2つで立つ
+  img.classList.toggle("half", h === 1);
+}
+function bShow(which) {
+  $("bCmd").hidden = which !== "cmd";
+  $("bYn").hidden = which !== "yn";
+}
+function bType(text) {
+  clearInterval(bTimer);
+  const el = $("bText");
+  let i = 0;
+  el.textContent = "";
+  $("bNext").hidden = true;
+  bTyping = text;
+  bTimer = setInterval(() => {
+    i++;
+    el.textContent = text.slice(0, i);
+    if (i >= text.length) { clearInterval(bTimer); bTyping = null; $("bNext").hidden = false; }
+  }, 32);
+}
+function bSay(msgs, after) {
+  bQueue = msgs.slice(); bAfter = after || null;
+  bShow("none");
+  bAdvance();
+}
+function bAdvance() {
+  if (bQueue.length) { bType(bQueue.shift()); return; }
+  const f = bAfter; bAfter = null;
+  $("bNext").hidden = true;
+  if (f) f();
+}
+function bMenu() { $("bText").textContent = "どうする?"; $("bNext").hidden = true; bShow("cmd"); }
+function bConfirm(cmd) { $("bText").textContent = "「" + EV_LABEL[cmd] + "」を 本当に そうしますか?"; $("bNext").hidden = true; bShow("yn"); bConfirm.cmd = cmd; }
+function bFinish() {
+  clearInterval(bTimer);
+  battleOpen = false;
+  $("battle").hidden = true;
+  save();
+  render();
+  showNextArrival();
+}
+function startBattle() {
+  battleOpen = true;
+  $("battle").hidden = false;
+  bHearts();
+  const first = ev().hearts === 0;
+  bSay(first ? ["ふぶきの なか、だれかが たおれている!", "たびおじが あらわれた!", "たびおじは こごえて うごけない…"] : ["たびおじは まだ ふるえている…"], bMenu);
+}
+$("bMsg").addEventListener("click", () => {
+  if (!battleOpen) return;
+  if (bTyping !== null) { clearInterval(bTimer); $("bText").textContent = bTyping; bTyping = null; $("bNext").hidden = false; return; }
+  if (!$("bNext").hidden) bAdvance();
+});
+$("bCmd").addEventListener("click", (e) => {
+  const cmd = e.target.dataset && e.target.dataset.cmd;
+  if (!cmd) return;
+  if (cmd === "warm") {
+    const r = evWarm();
+    bHearts();
+    bSay(r.msgs, r.end ? bFinish : bMenu);
+  } else {
+    bConfirm(cmd);
+  }
+});
+$("bYn").addEventListener("click", (e) => {
+  const yn = e.target.dataset && e.target.dataset.yn;
+  if (!yn) return;
+  if (yn === "no") { bMenu(); return; }
+  const r = evGiveUp(bConfirm.cmd);
+  bSay(r.msgs, bFinish);
+});
+
 // ---------- ブラウザ用テストボタン ----------
 if (!NATIVE && (!WEB || location.search.includes("dev"))) {
   $("dev").hidden = false;
@@ -229,10 +350,23 @@ if (!NATIVE && (!WEB || location.search.includes("dev"))) {
       S.mockCounter = (S.mockCounter || 0) + Number(add);
       if (S.lastCounter === null) S.lastCounter = 0;
       sync();
+    } else if (e.target.hasAttribute("data-event")) {
+      devJumpEvent();
     } else if (e.target.hasAttribute("data-reset")) {
       S = freshState(); S.lastCounter = 0; save(); render();
     }
   });
+}
+
+// テスト用: 鳥海山の2000歩手前まで進めて、イベントをはじめから始める
+function devJumpEvent() {
+  for (const sp of SPOTS) if (sp.cum <= EVENT_AT) { S.arrivals[sp.id] = S.arrivals[sp.id] || { t: Date.now() }; S.seen[sp.id] = true; }
+  S.total = Math.max(S.total, EVENT_AT);
+  S.history.push([Date.now(), S.total]);
+  S.ev = null;
+  save();
+  registerArrivals();
+  render();
 }
 
 // ---------- Web版: 歩数の手入力 ----------
@@ -283,3 +417,4 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) sync
 setInterval(sync, 3000);
 render();
 if (WEB) registerArrivals(); else sync();
+if (location.search.includes("dev") && location.hash === "#battle") devJumpEvent();     // 画面確認用

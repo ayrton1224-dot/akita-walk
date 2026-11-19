@@ -122,6 +122,9 @@ const MapView = (() => {
     walkerEl.style.transform = "translate(" + px + "px," + py + "px)";
     const west = (q[1] - r[1]) < 0;
     walkerEl.firstElementChild.style.transform = west ? "scaleX(-1)" : "none";
+    walkerEl.classList.toggle("west", west);
+    const buddy = walkerEl.querySelector(".buddy");           // 仲間のたびおじ(左向きの絵なので、山女子と逆に反転)
+    if (buddy) buddy.style.transform = west ? "none" : "scaleX(-1)";
   }
 
   function draw() {

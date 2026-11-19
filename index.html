@@ -25,6 +25,7 @@
 
   <section class="guide">
     <img id="guideImg" src="chara/right-egao.svg" alt="山女子">
+    <img id="guideBuddy" class="guide-buddy" src="chara/tabioji-egao.svg" alt="たびおじ" hidden>
     <div class="bubble" id="guideText"></div>
   </section>
 
@@ -54,7 +55,7 @@
     <div class="map" id="map">
       <div class="tiles"></div>
       <svg class="overlay" aria-label="秋田県の旅のルート"></svg>
-      <div class="walker"><img src="chara/right.svg" alt="山女子"></div>
+      <div class="walker"><img src="chara/right.svg" alt="山女子"><img class="buddy" src="chara/tabioji-egao.svg" alt="たびおじ" hidden></div>
       <div class="map-ctrl">
         <button class="map-btn" data-zoom-in aria-label="拡大">＋</button>
         <button class="map-btn" data-zoom-out aria-label="縮小">－</button>
@@ -81,10 +82,11 @@
       <button data-add="500">+500歩</button>
       <button data-add="3000">+3000歩</button>
       <button data-add="10000">+1万歩</button>
+      <button data-event>イベント(鳥海山の手前へ)</button>
       <button data-reset>リセット</button>
     </div>
   </section>
-  <p class="ver">v2.2 ・ 67か所 ・ 2026/11/19</p>
+  <p class="ver">v2.3 ・ 67か所 ・ 2026/11/19</p>
 </main>
 
 <div class="modal" id="modal" hidden>
@@ -102,6 +104,29 @@
     <p class="fact" id="mFact"></p>
     <div class="sheet-actions">
       <button id="mClose">つぎへ</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="battle" hidden>
+  <div class="battle" role="dialog" aria-label="たびおじを発見">
+    <div class="b-scene">
+      <div class="b-snow"></div>
+      <div class="b-enemy">
+        <div class="b-shake" id="bShake"><img id="bEnemy" class="lie" src="chara/tabioji-komari.svg" alt="たびおじ"></div>
+        <div class="b-name">たびおじ <span id="bHearts" aria-label="ハート">♡♡♡</span></div>
+      </div>
+    </div>
+    <div class="b-win b-msg" id="bMsg"><span id="bText"></span><i class="b-next" id="bNext" hidden>▼</i></div>
+    <div class="b-win b-cmd" id="bCmd" hidden>
+      <button data-cmd="fight">戦う</button>
+      <button data-cmd="flee">逃げる</button>
+      <button data-cmd="warm">温める</button>
+      <button data-cmd="ignore">無視</button>
+    </div>
+    <div class="b-win b-yn" id="bYn" hidden>
+      <button data-yn="yes">はい</button>
+      <button data-yn="no">いいえ</button>
     </div>
   </div>
 </div>
