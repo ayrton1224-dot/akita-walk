@@ -68,7 +68,7 @@ function arrivalTime(cum) {
 }
 
 function registerArrivals() {
-  for (const sp of SPOTS) {
+  for (const sp of visibleSpots()) {
     if (S.total < sp.cum) break;
     if (!S.arrivals[sp.id]) {
       const t = arrivalTime(sp.cum);
@@ -84,13 +84,14 @@ function registerArrivals() {
 function photoUrl(sp) { return PHOTOS[sp.id] ? "photos/" + sp.id + ".jpg" : ""; }
 
 // ---------- 画面: ガイド・次の目的地 ----------
-function nextSpot() { return SPOTS.find((s) => S.total < s.cum); }
+function nextSpot() { return visibleSpots().find((s) => S.total < s.cum); }
 
 function guideSay() {
   const n = nextSpot();
-  const hint = n ? n.preArea + "の名所" : "";
+  const hint = n ? placeHint(n) : "";
   if (!n) return ["right-egao", "ついに秋田一周ゴール! ここまで歩き切ったあなたは最高の旅人だよ。"];
-  const prev = SPOTS[SPOTS.indexOf(n) - 1];
+  const vs = visibleSpots();
+  const prev = vs[vs.indexOf(n) - 1];
   const remain = n.cum - S.total;
   const leg = n.cum - (prev ? prev.cum : 0);
   const ratio = 1 - remain / leg;
@@ -117,16 +118,17 @@ function render() {
 
   const n = nextSpot();
   if (n) {
-    const prev = SPOTS[SPOTS.indexOf(n) - 1];
+    const vs = visibleSpots();
+    const prev = vs[vs.indexOf(n) - 1];
     const base = prev ? prev.cum : 0;
     const pct = Math.min(100, ((S.total - base) / (n.cum - base)) * 100);
     $("nextLabel").textContent = "次の目的地";
-    $("nextName").textContent = n.preArea + "の名所";
+    $("nextName").textContent = placeHint(n);
     $("barFill").style.width = pct + "%";
     $("nextRemain").textContent = "あと " + fmt(n.cum - S.total) + " 歩";
     $("nextPct").textContent = Math.floor(pct) + "%";
     const nowE = Math.round(MapView.elevAt(currentKm()));
-    $("nextElev").textContent = "いまの標高 約" + nowE + "m → " + n.preArea + "の名所 標高 約" + n.elev + "m(あと約" + Math.max(0.1, n.km - currentKm()).toFixed(1) + "km)";
+    $("nextElev").textContent = "いまの標高 約" + nowE + "m → " + placeHint(n) + " 標高 約" + n.elev + "m(あと約" + Math.max(0.1, n.km - currentKm()).toFixed(1) + "km)";
   } else {
     $("nextElev").textContent = "";
     $("nextLabel").textContent = "旅のゴール";
@@ -145,6 +147,7 @@ function currentKm() { return S.total / STEPS_PER_KM; }
 function renderMap() {
   const km = currentKm();
   const n = nextSpot();
+  MapView.setSpots(visibleSpots()); Profile.setSpots(visibleSpots());
   MapView.setState(Object.keys(S.arrivals), n ? n.id : null);
   MapView.walkTo(km);
   Profile.draw(km, Object.keys(S.arrivals));
@@ -154,7 +157,7 @@ function renderMap() {
 function renderList() {
   const ol = $("list");
   ol.replaceChildren();
-  SPOTS.forEach((sp, i) => {
+  visibleSpots().forEach((sp, i) => {
     const a = S.arrivals[sp.id];
     const li = document.createElement("li");
     li.className = a ? "on" : "off";
@@ -199,8 +202,10 @@ function openSpot(sp, firstTime) {
 
   const url = photoUrl(sp);
   $("mPhoto").hidden = !url;
-  $("mNoPhoto").hidden = !!url;
-  if (url) {
+  $("mNoPhoto").hidden = !!url || !!sp.special;
+  if (sp.special) {
+    $("mSay").textContent = sp.say;
+  } else if (url) {
     const ph = PHOTOS[sp.id];
     $("mPhotoImg").src = url;
     $("mCaption").textContent = "ベストショット  " + ph.date + " 撮影 / " + ph.place;
@@ -233,14 +238,19 @@ if ($("finale")) {
 const EVENT_AT = SPOTS.find((s) => s.id === "chokai").cum - 2000;
 const EV_HEARTS = 3;
 const EV_LABEL = { fight: "戦う", flee: "逃げる", warm: "温める", ignore: "無視" };
-const EV_END = {
-  fight: ["山女子は たびおじに たたかいを いどんだ!", "しかし たびおじは ぴくりとも うごかない…", "山女子は その場を あとにした。"],
-  flee: ["山女子は にげだした!", "たびおじを のこして、さきへ すすんだ…"],
-  ignore: ["山女子は たびおじを むしした。", "ふぶきの なか、たびおじは ひとり とりのこされた…"],
+const EV_END = {          // 3つめのメッセージで、たびおじが言いながら消える
+  fight: ["山女子は たびおじに たたかいを いどんだ!", "たびおじ「悲しい～」", "たびおじは そう いいながら きえていった…"],
+  flee: ["山女子は にげだした!", "たびおじ「さみしい～」", "たびおじは そう いいながら きえていった…"],
+  ignore: ["山女子は たびおじを むしした。", "たびおじ「さみしい～」", "たびおじは そう いいながら きえていった…"],
 };
 function ev() { return (S.ev = S.ev || { done: false, hearts: 0, buddy: false }); }
 function eventPending() { return !ev().done && S.total >= EVENT_AT; }
 function hasBuddy() { return !!(S.ev && S.ev.buddy); }
+
+// たびおじが仲間のときだけ、千秋公園の南西約3kmの「行きつけ」(buddyOnly)が観光地に加わる
+function visibleSpots() { return SPOTS.filter((sp) => !sp.buddyOnly || hasBuddy()); }
+function placeHint(n) { return n.buddyOnly ? n.name : n.preArea + "の名所"; }
+Object.assign(SPOTS.find((sp) => sp.id === "ikitsuke"), { special: true, say: "「ここが ぼくの いきつけだよ!」" });
 
 // 温める → ハートが1つつく。3つになったら仲間になってイベント終了
 function evWarm() {
@@ -265,6 +275,7 @@ function evGiveUp(cmd) {
 let battleOpen = false, bQueue = [], bAfter = null, bTimer = null, bTyping = null;
 function bHearts() {
   const h = ev().hearts;
+  $("bShake").classList.remove("vanish");
   $("bHearts").textContent = "♥".repeat(h) + "♡".repeat(EV_HEARTS - h);
   const img = $("bEnemy");
   img.src = "chara/" + (h >= EV_HEARTS ? "tabioji-egao" : h === 2 ? "tabioji-nattoku" : "tabioji-komari") + ".svg";
@@ -338,7 +349,8 @@ $("bYn").addEventListener("click", (e) => {
   if (!yn) return;
   if (yn === "no") { bMenu(); return; }
   const r = evGiveUp(bConfirm.cmd);
-  bSay(r.msgs, bFinish);
+  // せりふのあと、たびおじが すうっと消える
+  bSay(r.msgs.slice(0, 2), () => { $("bShake").classList.add("vanish"); bSay(r.msgs.slice(2), bFinish); });
 });
 
 // ---------- ブラウザ用テストボタン ----------
@@ -352,6 +364,8 @@ if (!NATIVE && (!WEB || location.search.includes("dev"))) {
       sync();
     } else if (e.target.hasAttribute("data-event")) {
       devJumpEvent();
+    } else if (e.target.hasAttribute("data-stop")) {
+      devJumpStop();
     } else if (e.target.hasAttribute("data-reset")) {
       S = freshState(); S.lastCounter = 0; save(); render();
     }
@@ -359,6 +373,17 @@ if (!NATIVE && (!WEB || location.search.includes("dev"))) {
 }
 
 // テスト用: 鳥海山の2000歩手前まで進めて、イベントをはじめから始める
+function devJumpStop() {            // たびおじが仲間の状態で、「行きつけ」に着く直前へ
+  S.ev = { done: true, hearts: 3, buddy: true };
+  const iki = SPOTS.find((sp) => sp.id === "ikitsuke");
+  for (const sp of visibleSpots()) if (sp.cum < iki.cum) { S.arrivals[sp.id] = S.arrivals[sp.id] || { t: Date.now() }; S.seen[sp.id] = true; }
+  delete S.arrivals[iki.id]; delete S.seen[iki.id];
+  S.total = iki.cum;
+  S.history.push([Date.now(), S.total]);
+  save();
+  registerArrivals();
+  render();
+}
 function devJumpEvent() {
   for (const sp of SPOTS) if (sp.cum <= EVENT_AT) { S.arrivals[sp.id] = S.arrivals[sp.id] || { t: Date.now() }; S.seen[sp.id] = true; }
   S.total = Math.max(S.total, EVENT_AT);
@@ -407,10 +432,10 @@ if (WEB) {
 }
 
 // ---------- 起動 ----------
-MapView.init({ root: $("map"), route: ROUTE, spots: SPOTS, onTap: (id) => {
+MapView.init({ root: $("map"), route: ROUTE, spots: visibleSpots(), onTap: (id) => {
   if (S.arrivals[id]) openSpot(SPOTS.find((s) => s.id === id), false);
 } });
-Profile.init({ route: ROUTE, spots: SPOTS, svg: $("profile") });
+Profile.init({ route: ROUTE, spots: visibleSpots(), svg: $("profile") });
 $("routeNote").textContent = "ルートは国道を中心にたどり、全長およそ" + Math.round(ROUTE.km[ROUTE.km.length - 1]) +
   "km。ゲーム内では 1km = " + STEPS_PER_KM + "歩 で進みます(全行程 " + fmt(SPOTS[SPOTS.length - 1].cum) + "歩)。";
 document.addEventListener("visibilitychange", () => { if (!document.hidden) sync(); });

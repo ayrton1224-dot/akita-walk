@@ -219,7 +219,8 @@ const MapView = (() => {
     anim = requestAnimationFrame(tick);
   }
 
-  return { init, setState, walkTo, pointAt, elevAt };
+  function setSpots(list) { spots = list; }     // たびおじが仲間のときだけ出る場所があるので、表示する観光地を差しかえられる
+  return { init, setState, walkTo, pointAt, elevAt, setSpots };
 })();
 
 // ---- 標高プロフィール(ルート全体の高低差と、いまの位置) ----
@@ -237,6 +238,7 @@ const Profile = (() => {
   const Y = (m) => H - PAD_B - Math.min(m, MAXE) / MAXE * (H - PAD_T - PAD_B);
 
   function init(opts) { route = opts.route; spots = opts.spots; svg = opts.svg; }
+  function setSpots(list) { spots = list; }
 
   function draw(km, arrivedIds) {
     svg.replaceChildren();
@@ -271,5 +273,5 @@ const Profile = (() => {
     svg.append(el("text", { class: "pf-km", x: PAD_L, y: H - 4 }, "0km"));
     svg.append(el("text", { class: "pf-km", x: W - PAD_R, y: H - 4, "text-anchor": "end" }, Math.round(route.km[route.km.length - 1]) + "km"));
   }
-  return { init, draw };
+  return { init, draw, setSpots };
 })();

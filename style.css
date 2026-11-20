@@ -167,6 +167,8 @@ button.ghost { background: var(--green-soft); color: var(--green); }
 .b-enemy img { height: 190px; display: block; margin: 0 auto; transition: transform .7s ease; transform-origin: 50% 50%; }
 .b-shake.frozen { animation: shiver .18s linear infinite alternate; }
 .b-shake.frozen img { filter: saturate(.55) brightness(1.06); }
+.b-shake.vanish { animation: vanish 1.6s ease-in forwards; }
+@keyframes vanish { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-28px); } }
 .b-enemy img.lie { transform: translateY(40px) rotate(-90deg); }       /* 雪の上に横たおれ */
 .b-enemy img.half { transform: translateY(14px) rotate(-38deg); }      /* 少し起きあがる */
 @keyframes shiver { from { transform: translateX(-2px); } to { transform: translateX(2px); } }
