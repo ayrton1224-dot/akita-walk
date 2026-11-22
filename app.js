@@ -249,7 +249,7 @@ function hasBuddy() { return !!(S.ev && S.ev.buddy); }
 
 // たびおじが仲間のときだけ、千秋公園の南西約3kmの「行きつけ」(buddyOnly)が観光地に加わる
 function visibleSpots() { return SPOTS.filter((sp) => !sp.buddyOnly || hasBuddy()); }
-function placeHint(n) { return n.buddyOnly ? n.name : n.preArea + "の名所"; }
+function placeHint(n) { return n.buddyOnly ? "？？？" : n.preArea + "の名所"; }
 Object.assign(SPOTS.find((sp) => sp.id === "ikitsuke"), { special: true, say: "「ここが ぼくの いきつけだよ!」" });
 
 // 温める → ハートが1つつく。3つになったら仲間になってイベント終了
