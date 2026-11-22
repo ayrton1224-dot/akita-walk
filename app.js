@@ -8,10 +8,11 @@ const $ = (id) => document.getElementById(id);
 // ---------- ルート(tools/build_route.py で作成)と観光地 ----------
 // ゲーム内換算: 実距離 1km = 150歩。到着歩数は実際の道のりから決める。
 const STEPS_PER_KM = 150;
+const START_STEPS = 20000;         // 歩数0から数え、最初の15,000歩は秋田駅から動かない(観光地の到着歩数はこの分だけ後ろにずれる)
 SPOTS.forEach((sp, i) => { sp.pre = PRE_NAMES[i]; sp.preArea = sp.pre.replace(/[0-9０-９]+$/, ""); });
 for (const sp of SPOTS) {
   const r = ROUTE.spots[sp.id];
-  Object.assign(sp, { km: r.km, lat: r.lat, lon: r.lon, elev: Math.round(r.elev), cum: Math.round(r.km * STEPS_PER_KM / 100) * 100 });
+  Object.assign(sp, { km: r.km, lat: r.lat, lon: r.lon, elev: Math.round(r.elev), cum: START_STEPS + Math.round(r.km * STEPS_PER_KM / 100) * 100 });
 }
 const fmt = (n) => Math.round(n).toLocaleString("ja-JP");
 
@@ -95,7 +96,7 @@ function guideSay() {
   const remain = n.cum - S.total;
   const leg = n.cum - (prev ? prev.cum : 0);
   const ratio = 1 - remain / leg;
-  if (S.total === 0) return ["right-wink", "秋田駅からスタート! まずは" + hint + "を目指して歩こう。写真もたくさん撮ってね。"];
+  if (S.total < START_STEPS) return ["right-wink", "秋田駅でじゅんび中! あと" + fmt(START_STEPS - S.total) + "歩あるくと、いよいよ出発だよ。写真もたくさん撮ってね。"];
   if (ratio > 0.8) return ["right-odoroki", "もうすぐ" + hint + "! あと" + fmt(remain) + "歩だよ。"];
   const climb = n.elev - MapView.elevAt(currentKm());
   if (ratio > 0.2 && climb > 300) return ["right-komari", "ここからは登りだよ。" + hint + "は標高約" + n.elev + "m。ゆっくり行こう。"];
@@ -142,7 +143,7 @@ function render() {
 }
 
 // ---------- 画面: 地図 ----------
-function currentKm() { return S.total / STEPS_PER_KM; }
+function currentKm() { return Math.max(0, S.total - START_STEPS) / STEPS_PER_KM; }
 
 function renderMap() {
   const km = currentKm();
@@ -232,10 +233,10 @@ if ($("finale")) {
 }
 
 // ---------- イベント: 鳥海山の手前で、遭難しているたびおじを見つける ----------
-// 鳥海山の2000歩手前で発生。ドラクエ風のコマンド戦闘画面。
+// 鳥海山の鉾立と山頂のあいだ(ちょうど真ん中)で発生。ドラクエ風のコマンド戦闘画面。
 //  温める: たびおじにハートが1つつく(3つで仲間になり、山女子と一緒に残りの道を歩く)
 //  戦う・逃げる・無視: 「本当にそうしますか?」と聞き、はいを選ぶとイベント終了(仲間にはならない)
-const EVENT_AT = SPOTS.find((s) => s.id === "chokai").cum - 2000;
+const EVENT_AT = Math.round((SPOTS.find((s) => s.id === "hokodate").cum + SPOTS.find((s) => s.id === "chokai").cum) / 200) * 100;     // 鉾立と山頂のちょうど真ん中
 const EV_HEARTS = 3;
 const EV_LABEL = { fight: "戦う", flee: "逃げる", warm: "温める", ignore: "無視" };
 const EV_END = {          // 3つめのメッセージで、たびおじが言いながら消える
@@ -372,7 +373,7 @@ if (!NATIVE && (!WEB || location.search.includes("dev"))) {
   });
 }
 
-// テスト用: 鳥海山の2000歩手前まで進めて、イベントをはじめから始める
+// テスト用: 鉾立と山頂のあいだまで進めて、イベントをはじめから始める
 function devJumpStop() {            // たびおじが仲間の状態で、「行きつけ」に着く直前へ
   S.ev = { done: true, hearts: 3, buddy: true };
   const iki = SPOTS.find((sp) => sp.id === "ikitsuke");
@@ -437,7 +438,7 @@ MapView.init({ root: $("map"), route: ROUTE, spots: visibleSpots(), onTap: (id) 
 } });
 Profile.init({ route: ROUTE, spots: visibleSpots(), svg: $("profile") });
 $("routeNote").textContent = "ルートは国道を中心にたどり、全長およそ" + Math.round(ROUTE.km[ROUTE.km.length - 1]) +
-  "km。ゲーム内では 1km = " + STEPS_PER_KM + "歩 で進みます(全行程 " + fmt(SPOTS[SPOTS.length - 1].cum) + "歩)。";
+  "km。ゲーム内では 1km = " + STEPS_PER_KM + "歩 で進みます(最初の " + fmt(START_STEPS) + "歩は秋田駅から動かず、ゴールは " + fmt(SPOTS[SPOTS.length - 1].cum) + "歩)。";
 document.addEventListener("visibilitychange", () => { if (!document.hidden) sync(); });
 setInterval(sync, 3000);
 render();

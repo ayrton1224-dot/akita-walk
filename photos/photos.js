@@ -40,6 +40,10 @@ const PHOTOS = {
   "date": "2025/10/04",
   "place": "大曲の花火"
  },
+ "hokodate": {
+  "date": "2025/08/16",
+  "place": "鳥海山 鉾立"
+ },
  "chokai": {
   "date": "2022/08/21",
   "place": "鳥海山の山頂(新山)"
